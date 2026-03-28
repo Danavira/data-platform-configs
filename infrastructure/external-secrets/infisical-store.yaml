@@ -1,0 +1,22 @@
+apiVersion: external-secrets.io/v1
+kind: ClusterSecretStore
+metadata:
+  name: infisical-store
+spec:
+  provider:
+    infisical:
+      hostAPI: https://app.infisical.com
+      auth:
+        universalAuthCredentials:
+          # NOTE: This secret "infisical-universal-auth" must be manually created.
+          clientId:
+            name: infisical-universal-auth
+            namespace: external-secrets
+            key: clientId
+          clientSecret:
+            name: infisical-universal-auth
+            namespace: external-secrets
+            key: clientSecret
+      secretsScope:
+        projectSlug: homelab-t5-do
+        environmentSlug: dev
