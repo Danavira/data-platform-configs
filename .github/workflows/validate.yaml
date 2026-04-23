@@ -1,0 +1,19 @@
+name: validate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  kubeconform:
+    name: kubeconform schema validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # TODO: install kubeconform with CRD schemas for ESO and cert-manager, then validate all YAML files
+      # kubeconform supports additional schema locations for CRDs via -schema-location flag
+      # CRDs to cover: ExternalSecret, ClusterSecretStore, ClusterIssuer
+      # kubeconform docs: https://github.com/yannh/kubeconform
+      # ESO CRD schemas: https://github.com/datreeio/CRDs-catalog
