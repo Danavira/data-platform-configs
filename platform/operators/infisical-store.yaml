@@ -9,6 +9,10 @@ spec:
       auth:
         universalAuthCredentials:
           # NOTE: This secret "infisical-universal-auth" must be manually created.
+          # kubectl create secret generic infisical-universal-auth \
+          # --namespace external-secrets \
+          # --from-literal=clientId=YOUR_ID \
+          # --from-literal=clientSecret=YOUR_SECRET
           clientId:
             name: infisical-universal-auth
             namespace: external-secrets
