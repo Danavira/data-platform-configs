@@ -76,10 +76,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: aquasecurity/trivy-action@0.28.0
-        with:
-          scan-type: config
-          scan-ref: .
-          exit-code: '1'
-          severity: HIGH,CRITICAL
-          skip-dirs: docs,.git
+      - name: Install trivy
+        run: curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+      - name: Scan configs
+        run: trivy config . --exit-code 1 --severity HIGH,CRITICAL --skip-dirs docs,.git
