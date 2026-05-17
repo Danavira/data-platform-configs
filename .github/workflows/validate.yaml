@@ -6,14 +6,80 @@ on:
     branches: [main]
 
 jobs:
-  kubeconform:
-    name: kubeconform schema validation
+  # ── Plain-secret detection ───────────────────────────────────────────────────
+  # All secrets in this repo must use ExternalSecret / ClusterExternalSecret
+  # (backed by Infisical). A plain kind: Secret with a data/stringData block
+  # means credentials are committed to git in cleartext.
+  detect-plain-secrets:
+    name: Detect plain Kubernetes Secrets
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      # TODO: install kubeconform with CRD schemas for ESO and cert-manager, then validate all YAML files
-      # kubeconform supports additional schema locations for CRDs via -schema-location flag
-      # CRDs to cover: ExternalSecret, ClusterSecretStore, ClusterIssuer
-      # kubeconform docs: https://github.com/yannh/kubeconform
-      # ESO CRD schemas: https://github.com/datreeio/CRDs-catalog
+      - name: Install PyYAML
+        run: pip install pyyaml --quiet
+
+      - name: Scan for kind:Secret with data
+        run: |
+          failed=false
+          while IFS= read -r file; do
+            if ! python3 - "$file" <<'EOF'
+          import sys, yaml
+          path = sys.argv[1]
+          with open(path) as f:
+              docs = list(yaml.safe_load_all(f))
+          for doc in docs:
+              if not isinstance(doc, dict):
+                  continue
+              if doc.get("kind") == "Secret" and (doc.get("data") or doc.get("stringData")):
+                  print(f"FAIL: {path} contains a plain Secret with embedded data")
+                  sys.exit(1)
+          EOF
+            then
+              echo "::error file=${file}::Plain Kubernetes Secret with data found. Use ExternalSecret instead."
+              failed=true
+            fi
+          done < <(find . -name "*.yaml" -not -path './.git/*')
+          [ "$failed" = "true" ] && exit 1 || true
+
+  # ── Schema validation ────────────────────────────────────────────────────────
+  # Validates ExternalSecret, ClusterExternalSecret, ClusterIssuer, and
+  # InfisicalSecret against their published CRD schemas.
+  kubeconform:
+    name: Schema validation (kubeconform)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install kubeconform
+        run: |
+          KUBECONFORM_VERSION=v0.6.7
+          curl -sL "https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz" \
+            | tar xz
+          sudo install -m 755 kubeconform /usr/local/bin/
+
+      - name: Validate schemas
+        run: |
+          kubeconform \
+            -strict \
+            -ignore-missing-schemas \
+            -schema-location default \
+            -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+            -summary \
+            apps/ platform/
+
+  # ── Trivy ────────────────────────────────────────────────────────────────────
+  # Config scan on the secrets/config manifests. Catches misconfigurations that
+  # might slip in (e.g. an accidentally committed plain Secret or unsafe RBAC).
+  trivy:
+    name: Trivy config scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: config
+          scan-ref: .
+          exit-code: '1'
+          severity: HIGH,CRITICAL
+          skip-dirs: docs,.git
