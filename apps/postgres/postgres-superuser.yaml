@@ -1,0 +1,21 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: postgres-superuser
+  namespace: postgres
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: infisical-store
+    kind: ClusterSecretStore
+  target:
+    name: postgres-superuser
+    creationPolicy: Owner
+    template:
+      data:
+        username: "postgres"
+        password: "{{ .postgresPassword }}"
+  data:
+    - secretKey: postgresPassword
+      remoteRef:
+        key: POSTGRES_PASSWORD
