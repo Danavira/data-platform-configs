@@ -16,12 +16,9 @@ data-platform-configs/
     │   ├── ghcr-creds.yaml             ← ExternalSecret: GHCR OCI chart credentials
     │   └── image-updater-secret.yaml   ← ExternalSecret: ArgoCD Image Updater git token
     │
-    ├── cert-manager/
-    │   ├── clusterissuer.yaml          ← ClusterIssuer: letsencrypt-cloudflare
-    │   └── cloudflare-secret.yaml      ← ExternalSecret: Cloudflare API token
-    │
-    └── hello-cicd/
-        └── ghcr-pull-secret.yaml       ← ExternalSecret: GHCR image pull secret
+    └── cert-manager/
+        ├── clusterissuer.yaml          ← ClusterIssuer: letsencrypt-cloudflare
+        └── cloudflare-secret.yaml      ← ExternalSecret: Cloudflare API token
 ```
 
 ## Infisical secrets required
