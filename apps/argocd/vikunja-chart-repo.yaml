@@ -1,0 +1,13 @@
+# Public OCI chart: registered without credentials. Sending a GitHub token
+# here makes ghcr.io reject the pull (403) if the token lacks read:packages.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: vikunja-chart-repo
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: repository
+stringData:
+  type: helm
+  url: oci://ghcr.io/go-vikunja/helm-chart/vikunja
+  enableOCI: "true"
