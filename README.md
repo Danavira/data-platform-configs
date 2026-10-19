@@ -13,7 +13,7 @@ data-platform-configs/
 └── apps/
     ├── argocd/
     │   ├── github-creds.yaml           ← ExternalSecret: GitHub repo credentials
-    │   ├── ghcr-creds.yaml             ← ExternalSecret: GHCR OCI chart credentials
+    │   ├── vikunja-chart-repo.yaml     ← Secret: public Vikunja OCI chart repo (no credentials)
     │   └── image-updater-secret.yaml   ← ExternalSecret: ArgoCD Image Updater git token
     │
     └── cert-manager/
